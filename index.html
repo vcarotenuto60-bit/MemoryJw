@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MEMORYJW</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);--bg:#f4f6fb;--card:#fff;--tx:#1b2433;--mu:#6b7589;--ac:#3b5bdb;--ac2:#f08c00;--ok:#2f9e44;--ko:#e03131;--bd:#dde2ee}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121620;--card:#1c2230;--tx:#eef1f8;--mu:#97a1b5;--ac:#7c93ff;--ac2:#ffb347;--ok:#51cf66;--ko:#ff6b6b;--bd:#2c3446}}
+:root[data-theme="dark"]{--bg:#121620;--card:#1c2230;--tx:#eef1f8;--mu:#97a1b5;--ac:#7c93ff;--ac2:#ffb347;--ok:#51cf66;--ko:#ff6b6b;--bd:#2c3446}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,Roboto,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+main{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:22px;text-align:center;margin:8px 0 4px;letter-spacing:.5px}h2{font-size:18px;margin:4px 0 12px}
+.sub{text-align:center;color:var(--mu);margin:0 0 22px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:12px}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:16px;font-size:17px;font-weight:700;color:#fff;background:var(--ac);cursor:pointer;margin-bottom:10px}
+.btn.b2{background:var(--ac2)}.btn.ok{background:var(--ok)}.btn.ko{background:var(--ko)}
+.btn.sm{display:inline-block;width:auto;padding:9px 14px;font-size:14px;margin:0 6px 6px 0}
+.btn.gh{background:transparent;color:var(--ac);border:1.5px solid var(--bd)}
+.row{display:flex;gap:10px}.row .btn{flex:1}
+select,input,textarea{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:11px;margin:4px 0 10px}
+label{font-size:13px;color:var(--mu)}
+.q{font-size:19px;white-space:pre-wrap}.lab{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--mu);margin-bottom:6px}
+.ans{border-left:4px solid var(--ok);font-size:19px;font-weight:600;white-space:pre-wrap}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin-bottom:14px}.bar i{display:block;height:100%;background:var(--ac)}
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--ac);color:#fff;margin-left:6px}.badge.p{background:var(--ac2)}
+.it{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.it small{color:var(--mu)}
+.big{font-size:54px;font-weight:800;text-align:center;margin:6px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.stats div{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px;text-align:center}.stats b{display:block;font-size:22px}.stats span{font-size:11px;color:var(--mu)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;background:none;color:var(--mu);padding:12px 4px;font-size:12px;cursor:pointer}nav button.on{color:var(--ac);font-weight:700}nav span{display:block;font-size:20px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:9}
+.md{background:var(--card);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));max-height:90%;overflow:auto}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:20px;font-size:14px;z-index:10}
+.sc{overflow-x:auto}.empty{text-align:center;color:var(--mu);padding:20px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav id="nav"></nav>
+<script>
+const K='memoryjw',uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const seed=[{id:uid(),name:'Esempio versetti',type:'v',items:[{id:uid(),q:'Dio ha tanto amato il mondo da dare suo Figlio (esempio)',a:'Giovanni 3:16',w:1}]},
+{id:uid(),name:'Esempio personaggi',type:'p',items:[{id:uid(),q:'Costruì un\'arca per salvare la sua famiglia dal Diluvio',a:'Noè',w:1}]}];
+let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!S||!S.lists)S={lists:seed,results:[],name:'',set:{dir:'normal',rem:'20:00',remOn:false,last:''}};
+if(typeof S.name!=='string')S.name='';
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const T={v:{q:'Versetto',a:'Riferimento',n:'Versetti'},p:{q:'Storia / qualità',a:'Personaggio',n:'Personaggi'}};
+let view='home',Q=null,openL=null,sel={v:'all',p:'all'};
+const $=s=>document.querySelector(s),app=$('#app');
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2400)}
+function modal(h){const o=document.createElement('div');o.className='ov';o.innerHTML='<div class="md">'+h+'</div>';o.onclick=e=>{if(e.target===o)o.remove()};document.body.appendChild(o);return o}
+
+/* ---------- RENDER ---------- */
+function nav(){const t=[['home','🏠','Home'],['lists','📚','Liste'],['stats','📊','Risultati'],['opt','⚙️','Opzioni']];
+$('#nav').innerHTML=t.map(x=>`<button class="${view===x[0]||(view==='list'&&x[0]==='lists')?'on':''}" data-go="${x[0]}"><span>${x[1]}</span>${x[2]}</button>`).join('')}
+function render(){nav();({home:rHome,quiz:rQuiz,lists:rLists,list:rList,stats:rStats,opt:rOpt})[view]()}
+
+function opts(t){return '<option value="all">Tutte le liste</option>'+S.lists.filter(l=>l.type===t&&l.items.length).map(l=>`<option value="${l.id}" ${sel[t]===l.id?'selected':''}>${esc(l.name)} (${l.items.length})</option>`).join('')}
+function rHome(){app.innerHTML=`<h1>MEMORYJW</h1><p class="sub">Mettiti alla prova${S.name?' · Ciao, '+esc(S.name)+'!':''}</p>
+<div class="card"><button class="btn" data-start="v">VERSETTI</button><select data-sel="v">${opts('v')}</select></div>
+<div class="card"><button class="btn b2" data-start="p">PERSONAGGI</button><select data-sel="p">${opts('p')}</select></div>
+<p class="sub">Sessioni da 20 domande. Gli errori tornano più spesso.</p>`}
+
+function start(t){
+ let pool=[];S.lists.filter(l=>l.type===t&&(sel[t]==='all'||l.id===sel[t])).forEach(l=>l.items.forEach(i=>pool.push({l:l.id,i})));
+ if(!pool.length)return toast('Aggiungi prima delle domande nelle Liste');
+ const n=Math.min(20,pool.length),pick=[];
+ while(pick.length<n){const tot=pool.reduce((s,p)=>s+(p.i.w||1),0);let r=Math.random()*tot,k=0;
+  for(;k<pool.length-1;k++){r-=pool[k].i.w||1;if(r<=0)break}pick.push(pool.splice(k,1)[0])}
+ const d=S.set.dir;
+ Q={t,items:pick.map(p=>({l:p.l,id:p.i.id,q:p.i.q,a:p.i.a,rev:d==='reverse'||(d==='mixed'&&Math.random()<.5)})),i:0,score:0,shown:false,done:false};
+ view='quiz';render()}
+
+function rQuiz(){
+ if(Q.done){const p=Math.round(Q.score/Q.items.length*100);
+  app.innerHTML=`<h2>Sessione completata</h2><div class="card"><div class="big">${Q.score}/${Q.items.length}</div><p class="sub" style="margin:0">${p}% — ${p>=80?'Ottimo lavoro! 🌟':p>=50?'Bene, continua così 💪':'Ripassa ancora: ce la farai! 📖'}</p></div>
+  <button class="btn" data-start="${Q.t}">RIPROVA</button><button class="btn gh" data-go="stats">VEDI RISULTATI</button><button class="btn gh" data-go="home">HOME</button>`;return}
+ const it=Q.items[Q.i],tt=T[Q.t],ql=it.rev?tt.a:tt.q,al=it.rev?tt.q:tt.a,qt=it.rev?it.a:it.q,at=it.rev?it.q:it.a;
+ app.innerHTML=`<div class="lab">${tt.n} · Domanda ${Q.i+1} di ${Q.items.length}</div><div class="bar"><i style="width:${Q.i/Q.items.length*100}%"></i></div>
+ <div class="card"><div class="lab">${ql}</div><div class="q">${esc(qt)}</div></div>
+ ${Q.shown?`<div class="card ans"><div class="lab">${al}</div>${esc(at)}</div><div class="row"><button class="btn ok" data-ans="1">GIUSTO</button><button class="btn ko" data-ans="0">SBAGLIATO</button></div>`:`<button class="btn" data-reveal>SVELA</button>`}
+ <button class="btn gh sm" data-go="home">Esci</button>`}
+
+function answer(ok){
+ const it=Q.items[Q.i],l=S.lists.find(x=>x.id===it.l),o=l&&l.items.find(x=>x.id===it.id);
+ if(o)o.w=ok?Math.max(1,(o.w||1)-1):Math.min(8,(o.w||1)+2);
+ if(ok)Q.score++;Q.i++;Q.shown=false;
+ if(Q.i>=Q.items.length){Q.done=true;S.results.push({d:Date.now(),t:Q.t,s:Q.score,n:Q.items.length})}
+ save();render()}
+
+function rLists(){app.innerHTML=`<h2>Le mie liste</h2><div class="row"><button class="btn sm" data-newlist>+ Nuova</button><button class="btn sm gh" data-import>Importa</button><button class="btn sm gh" data-shareall>Condividi tutto</button></div>
+ ${S.lists.length?S.lists.map(l=>`<div class="card it" data-open="${l.id}" style="cursor:pointer"><div><b>${esc(l.name)}</b><span class="badge ${l.type}">${T[l.type].n}</span><br><small>${l.items.length} domande</small></div><span>›</span></div>`).join(''):'<div class="empty">Nessuna lista. Creane una!</div>'}`}
+
+function rList(){const l=S.lists.find(x=>x.id===openL);if(!l){view='lists';return render()}
+ app.innerHTML=`<button class="btn gh sm" data-go="lists">‹ Liste</button><h2>${esc(l.name)}<span class="badge ${l.type}">${T[l.type].n}</span></h2>
+ <button class="btn" data-additem>+ Aggiungi ${l.type==='v'?'versetto':'personaggio'}</button>
+ <div>${l.items.map(i=>`<div class="card"><div class="it"><div><small>${T[l.type].q}</small><div style="white-space:pre-wrap">${esc(i.q)}</div><small>${T[l.type].a}</small><div><b>${esc(i.a)}</b></div></div></div><div style="margin-top:10px"><button class="btn sm gh" data-edit="${i.id}">Modifica</button><button class="btn sm gh" data-del="${i.id}">Elimina</button></div></div>`).join('')||'<div class="empty">Lista vuota</div>'}</div>
+ <button class="btn sm" data-share="${l.id}">Condividi lista</button><button class="btn sm gh" data-ren>Rinomina</button><button class="btn sm gh" data-dellist>Elimina lista</button>`}
+
+function streak(){const days=new Set(S.results.map(r=>new Date(r.d).toDateString()));let n=0,d=new Date();
+ if(!days.has(d.toDateString()))d.setDate(d.getDate()-1);
+ while(days.has(d.toDateString())){n++;d.setDate(d.getDate()-1)}return n}
+function rStats(){const R=S.results,pc=r=>Math.round(r.s/r.n*100);
+ if(!R.length){app.innerHTML='<h2>Risultati</h2><div class="empty">Completa una sessione per vedere il grafico.</div>';return}
+ const avg=Math.round(R.reduce((s,r)=>s+pc(r),0)/R.length),rec=Math.max(...R.map(pc)),L=R.slice(-15),w=Math.max(300,L.length*34),h=160;
+ const bars=L.map((r,i)=>{const bh=Math.max(3,pc(r)/100*h),x=i*34+6;return `<rect x="${x}" y="${h-bh+10}" width="24" height="${bh}" rx="5" fill="${r.t==='v'?'var(--ac)':'var(--ac2)'}"/><text x="${x+12}" y="${h-bh+5}" font-size="10" text-anchor="middle" fill="var(--mu)">${pc(r)}</text>`}).join('');
+ app.innerHTML=`<h2>Risultati${S.name?' di '+esc(S.name):''}</h2><div class="stats"><div><b>${R.length}</b><span>Sessioni</span></div><div><b>${avg}%</b><span>Media</span></div><div><b>${rec}%</b><span>Record</span></div></div>
+ <div class="stats" style="grid-template-columns:1fr"><div><b>🔥 ${streak()}</b><span>Giorni consecutivi</span></div></div>
+ <div class="card"><div class="lab">Ultime sessioni (% corrette) · <span style="color:var(--ac)">■</span> Versetti <span style="color:var(--ac2)">■</span> Personaggi</div><div class="sc"><svg viewBox="0 0 ${w} ${h+16}" width="${w}" height="${h+16}">${bars}</svg></div></div>
+ ${R.slice(-8).reverse().map(r=>`<div class="card it"><div><b>${T[r.t].n}</b><br><small>${new Date(r.d).toLocaleString('it-IT',{dateStyle:'medium',timeStyle:'short'})}</small></div><b>${r.s}/${r.n} · ${pc(r)}%</b></div>`).join('')}
+ <button class="btn gh sm" data-clr>Azzera risultati</button>`}
+
+function rOpt(){const s=S.set;app.innerHTML=`<h2>Opzioni</h2><div class="card"><label>Il tuo nome</label><input id="nm" value="${esc(S.name)}" placeholder="Il tuo nome"></div><div class="card"><label>Direzione delle domande</label>
+ <select id="dir"><option value="normal" ${s.dir==='normal'?'selected':''}>Normale (testo → riferimento / storia → nome)</option><option value="reverse" ${s.dir==='reverse'?'selected':''}>Inversa (riferimento → testo / nome → storia)</option><option value="mixed" ${s.dir==='mixed'?'selected':''}>Mista</option></select></div>
+ <div class="card"><label><input type="checkbox" id="remOn" style="width:auto;margin-right:8px" ${s.remOn?'checked':''}>Promemoria giornaliero</label><label>Orario</label><input type="time" id="rem" value="${s.rem}">
+ <small style="color:var(--mu)">Su Android il promemoria funziona solo con l'app aperta; nell'app nativa sarà un vero promemoria.</small></div>`}
+
+/* ---------- SHARE / IMPORT ---------- */
+async function shareData(obj,name){const txt=JSON.stringify(obj);
+ try{const C=window.Capacitor,SH=C&&C.Plugins&&C.Plugins.Share;if(SH){await SH.share({title:'MEMORYJW',text:txt,dialogTitle:'Condividi lista'});return}}catch(e){if(/cancel/i.test((e&&e.message)||''))return}
+ try{const f=new File([txt],name+'.json',{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]}))return await navigator.share({files:[f],title:'MEMORYJW'})}catch(e){if(e.name==='AbortError')return}
+ try{if(navigator.share)return await navigator.share({title:'MEMORYJW',text:txt})}catch(e){if(e.name==='AbortError')return}
+ try{await navigator.clipboard.writeText(txt);toast('Copiato! Incollalo in un messaggio')}catch(e){const m=modal('<label>Copia questo testo e inviarlo</label><textarea rows="8" readonly>'+esc(txt)+'</textarea>');m.querySelector('textarea').select()}}
+const pack=l=>({app:'memoryjw',v:1,by:S.name,list:{name:l.name,type:l.type,items:l.items.map(i=>({q:i.q,a:i.a}))}});
+function doImport(txt,replace){let d;try{d=JSON.parse(txt)}catch(e){return toast('Contenuto non valido')}
+ const ls=d.lists||(d.list?[d.list]:null);if(!d||d.app!=='memoryjw'||!ls)return toast('Non è una lista MEMORYJW');
+ ls.forEach(n=>{if(!n||!Array.isArray(n.items)||!['v','p'].includes(n.type))return;
+  const ex=S.lists.find(l=>l.name===n.name&&l.type===n.type),items=n.items.filter(i=>i.q&&i.a).map(i=>({id:uid(),q:String(i.q),a:String(i.a),w:1}));
+  if(ex){if(replace)ex.items=items;else items.forEach(i=>{if(!ex.items.some(o=>o.q===i.q&&o.a===i.a))ex.items.push(i)})}
+  else S.lists.push({id:uid(),name:String(n.name||'Lista importata'),type:n.type,items})});
+ save();toast('Importazione completata'+(d.by?' (da '+d.by+')':''));view='lists';render()}
+
+/* ---------- FORMS ---------- */
+function itemForm(l,it){const m=modal(`<h2>${it?'Modifica':'Nuova domanda'}</h2><label>${T[l.type].q}</label><textarea id="fq" rows="4">${it?esc(it.q):''}</textarea><label>${T[l.type].a}</label><textarea id="fa" rows="2">${it?esc(it.a):''}</textarea><button class="btn" id="ok">SALVA</button>`);
+ m.querySelector('#ok').onclick=()=>{const q=m.querySelector('#fq').value.trim(),a=m.querySelector('#fa').value.trim();if(!q||!a)return toast('Compila entrambi i campi');
+  if(it){it.q=q;it.a=a}else l.items.push({id:uid(),q,a,w:1});save();m.remove();render()}}
+
+document.addEventListener('click',e=>{const t=e.target.closest('button,[data-open]');if(!t)return;const D=t.dataset,l=S.lists.find(x=>x.id===openL);
+ if('go' in D){view=D.go;Q=D.go==='home'?null:Q;render()}
+ else if('start' in D)start(D.start);
+ else if('reveal' in D){Q.shown=true;render()}
+ else if('ans' in D)answer(D.ans==='1');
+ else if('open' in D){openL=D.open;view='list';render()}
+ else if('newlist' in D){const m=modal('<h2>Nuova lista</h2><label>Nome</label><input id="n"><label>Tipo</label><select id="t"><option value="v">Versetti</option><option value="p">Personaggi</option></select><button class="btn" id="ok">CREA</button>');
+  m.querySelector('#ok').onclick=()=>{const n=m.querySelector('#n').value.trim();if(!n)return toast('Inserisci un nome');S.lists.push({id:uid(),name:n,type:m.querySelector('#t').value,items:[]});save();m.remove();render()}}
+ else if('additem' in D)itemForm(l);
+ else if('edit' in D)itemForm(l,l.items.find(i=>i.id===D.edit));
+ else if('del' in D){if(confirm('Eliminare questa domanda?')){l.items=l.items.filter(i=>i.id!==D.del);save();render()}}
+ else if('dellist' in D){if(confirm('Eliminare tutta la lista?')){S.lists=S.lists.filter(x=>x.id!==openL);save();view='lists';render()}}
+ else if('ren' in D){const n=prompt('Nuovo nome',l.name);if(n&&n.trim()){l.name=n.trim();save();render()}}
+ else if('share' in D)shareData(pack(l),l.name);
+ else if('shareall' in D)shareData({app:'memoryjw',v:1,by:S.name,lists:S.lists.map(x=>pack(x).list)},'memoryjw-liste');
+ else if('import' in D){const m=modal('<h2>Importa liste</h2><label>Scegli un file .json</label><input type="file" id="f" accept=".json,application/json"><label>…oppure incolla il testo ricevuto</label><textarea id="x" rows="4"></textarea><label><input type="checkbox" id="r" style="width:auto;margin-right:8px">Sostituisci le liste con lo stesso nome (altrimenti unisci)</label><button class="btn" id="ok">IMPORTA</button>');
+  m.querySelector('#ok').onclick=async()=>{const f=m.querySelector('#f').files[0];const txt=f?await f.text():m.querySelector('#x').value;m.remove();doImport(txt,m.querySelector('#r').checked)}}
+ else if('clr' in D){if(confirm('Azzerare tutti i risultati?')){S.results=[];save();render()}}});
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.dataset.sel)sel[t.dataset.sel]=t.value;
+ else if(t.id==='nm'){S.name=t.value.trim();save()}
+ else if(t.id==='dir'){S.set.dir=t.value;save()}
+ else if(t.id==='remOn'){S.set.remOn=t.checked;save();if(t.checked&&window.Notification&&Notification.permission==='default')Notification.requestPermission()}
+ else if(t.id==='rem'){S.set.rem=t.value;save()}});
+setInterval(()=>{const s=S.set,n=new Date(),hm=n.toTimeString().slice(0,5),day=n.toDateString();
+ if(s.remOn&&hm===s.rem&&s.last!==day){s.last=day;save();try{if(window.Notification&&Notification.permission==='granted')new Notification('MEMORYJW',{body:'È ora di allenarti! 📖'});else toast('È ora di allenarti! 📖')}catch(e){toast('È ora di allenarti! 📖')}}},30000);
+function askName(){const m=modal('<h2>Benvenuto!</h2><label>Come ti chiami?</label><input id="nm" placeholder="Il tuo nome"><button class="btn" id="ok">INIZIA</button>');
+ m.querySelector('#ok').onclick=()=>{const n=m.querySelector('#nm').value.trim();if(!n)return toast('Inserisci il tuo nome');S.name=n;save();m.remove();render()}}
+render();
+if(!S.name)askName();
+</script>
+</body>
+</html>
